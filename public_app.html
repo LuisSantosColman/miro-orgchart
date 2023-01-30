@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script id="miro-sdk2" src="https://miro.com/app/static/sdk/v2/miro.js"></script>
+    <link rel="icon" href="data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=">
+    <link rel="stylesheet" href="orgchart.css">
+    <style>
+        html,body {
+          height: 100%;
+          margin: 0;
+          padding: 0;
+          padding: 1px;
+          box-sizing: border-box;
+        }
+        
+        body {
+          font-family: Arial;
+          color: #333333;
+        }
+        
+        #chart-container {
+          height: 100%;
+          border: 0 solid #aaa;
+          margin: 0;
+          overflow: auto;
+          text-align: center;
+        }
+      
+        li[data-children="1"] {
+          margin-left: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div id="chart-container"></div>
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="orgchart.js"></script>
+    <script type="text/javascript">
+
+    window.inProgress = false;
+    var settingsModalUrl;
+      
+    async function start() {
+        if (window.inProgress === false) {      
+          await miro.board.ui.openModal({
+                url: 'public_settings.html', 
+                height: 480,
+                width: 570,
+                fullscreen: false
+            });          
+        }
+        else {
+          console.log('Creating a chart please wait');
+        }
+    }
+
+    if (window.self != window.top) {
+        async function init(includeLevels, orgchartLayout, csvContent, csvHeaders) {
+            window.inProgress = true;
+            window.mainHeaders = csvHeaders;
+            var sheetsData = csvContent;
+            var conflicts = [];
+            var headers;
+            var users = [];
+            var employees = [];
+            var hashTable = {};
+
+            for(var i=0; i < sheetsData.length; i++){
+              if (sheetsData[i].hasOwnProperty('Name')) {
+                  var id = sheetsData[i]['Work Email'].value.trim();
+                  sheetsData[i]['Work Email'].value = id;
+                  if (hashTable.hasOwnProperty(id)) {
+                    sheetsData.splice(i,1);
+                    i--;
+                  }
+                  else {
+                    sheetsData[i].id = {value: id};
+                    var manager_id = sheetsData[i].hasOwnProperty('Manager Email Address') ? sheetsData[i]['Manager Email Address'].value.trim() : '';
+                    sheetsData[i].manager_id = {value: manager_id};
+                    hashTable[id] = { ...sheetsData[i] };
+                  }
+              }
+            }
+
+           //Add properties ignored by Google (Google sometimes ignores empty cells)
+            var arrayOfKeys = Object.keys(hashTable);
+            for(var q=0; q < arrayOfKeys.length; q++){
+              for(var n=0; n < window.mainHeaders.length; n++) {
+                if (!hashTable[arrayOfKeys[q]].hasOwnProperty(window.mainHeaders[n])) {
+                  hashTable[arrayOfKeys[q]][window.mainHeaders[n]] = {
+                    value: ''
+                  };
+                }
+              }
+            }
+
+            var datasourceOrig = JSON.stringify(hashTable);
+            datasourceOrig = JSON.parse(datasourceOrig);
+            var dataObject = Object.keys(datasourceOrig);
+
+            for(var f=0; f < dataObject.length; f++) {
+                var dataObjectProps = Object.keys(dataObject[f]);
+                for(var g=0; g < dataObjectProps.length; g++) {
+                    if (dataObjectProps[g] == 'children') {
+                        delete dataObject[f][dataObjectProps[g]];
+                    }
+                }
+            }
+
+            var dataTree = [];
+            for(var a=0; a < sheetsData.length; a++){
+              if (sheetsData[a].hasOwnProperty('Name')) {
+                if (sheetsData[a]['Name'].value !== '') {
+                  if(sheetsData[a].manager_id.value && hashTable[sheetsData[a].manager_id.value] !== undefined) {
+                      if(hashTable[sheetsData[a].manager_id.value].children === undefined) {
+                          hashTable[sheetsData[a].manager_id.value].children = [];
+                      }
+                      hashTable[sheetsData[a].manager_id.value].children.push(hashTable[sheetsData[a].id.value])
+                  }
+                  else dataTree.push(hashTable[sheetsData[a].id.value])
+                }
+              }
+            }
+
+            window.datatree = dataTree;
+            
+            var datasource = JSON.stringify(dataTree);
+            datasource = JSON.parse(datasource);
+
+            function arrangeObject(array) {
+                for(var i=0; i < array.length; i++) {
+                    var propArray = Object.keys(array[i]);
+                    if (array[i].id) {
+                        array[i].name = array[i].id.value.toString();
+                    }
+                    for(var a=0; a < propArray.length; a++) {
+                        if (propArray[a] !== 'name' && propArray[a] !== 'children') {
+                            delete array[i][propArray[a]];
+                        }
+                        if (array[i].children && array[i].children.length > 0) {
+                            arrangeObject(array[i].children);
+                        }
+                    }
+                }
+            }
+            arrangeObject(datasource);
+          
+          /* Only for OrgCharts with Vertical ICs - BEGIN */
+          if (orgchartLayout == 'hybrid') {
+            function sortChildren(array) {
+              var referenceArr = [];
+
+              for(var i=0; i < array.length; i++) {
+                  referenceItem = {
+                      name: array[i].name,
+                      value: array[i].hasOwnProperty('children') ? array[i].children.length.toString() : '0'
+                  };
+                  referenceArr.push(referenceItem);
+
+                  function compareNumbers(a, b) {
+                    return a.value - b.value;
+                  }
+
+                  referenceArr.sort(compareNumbers);
+              }
+              
+              newChildrenArr = [];
+              referenceArr.forEach(function(item1, index1) {
+                  array.forEach(function(item2, index2) {
+                      if (item1.name == item2.name) {
+                          newChildrenArr.push(item2);
+                      }
+                  });
+              });
+              
+              array = newChildrenArr;
+              for(var i=0; i < array.length; i++) {
+                  if (array[i].hasOwnProperty('children')) {
+                      array[i].children = sortChildren(array[i].children);
+                  }
+              }
+
+              return array;
+            }
+          
+            function newSort(array) {
+              
+              function myAbcSort(a, b) {
+                var aLength = a.hasOwnProperty('children') ? a.children.length : 0;
+                var bLength = b.hasOwnProperty('children') ? b.children.length : 0;
+                if(aLength < bLength) {
+                    return -1;
+                }
+                else {
+                    return 1;
+                }
+              }
+              
+              for(var i=0; i < array.length; i++) {
+                  if (array[i].hasOwnProperty('children')) {
+                      array[i].children.sort(myAbcSort);
+                      newSort(array[i].children);
+                  }
+              }
+              return array;
+            }
+            datasource = newSort(datasource);
+          
+          }
+            /* Only for OrgCharts with Vertical ICs - END */
+
+            window.datasource = datasource;
+            jQuery('#chart-container').orgchart({
+                'data' : datasource[0]
+            });
+          
+          
+          /* Only for OrgCharts with Vertical ICs - BEGIN */
+          if (orgchartLayout == 'hybrid') {
+            
+            var rowsOfManagers = document.querySelectorAll('ul');
+            var employeeGroups = [];
+            for(var i=0; i < rowsOfManagers.length; i++) {
+                if (i !== 0) {
+                    var employees = rowsOfManagers[i].children;
+                    employeeGroups.push(employees);
+                }
+            }
+
+            for(var i=0; i < employeeGroups.length; i++) {
+                for(var a=0; a < employeeGroups[i].length; a++) {
+                    if (a == 0) {
+                        employeeGroups[i][a].setAttribute('data-index', '0');
+                    }
+                    else {
+                        employeeGroups[i][a].setAttribute('data-index', '1');
+                    }
+
+                    var children = employeeGroups[i][a].querySelectorAll('li');
+                    if (children.length === 0) {
+                        employeeGroups[i][a].setAttribute('data-type', 'ic');
+                    }
+
+                    else {
+                        employeeGroups[i][a].setAttribute('data-type', 'non_ic');
+                    }
+                }
+            }
+
+            var allNonFirstIcs = document.querySelectorAll('li[data-type="ic"][data-index="1"]');
+            for (var i=0; i < allNonFirstIcs.length; i++) {
+                var firstIcInGroup = allNonFirstIcs[i].closest('ul').querySelector('li[data-type="ic"][data-index="0"]');
+                firstIcInGroup.appendChild(allNonFirstIcs[i]);
+            }
+
+            var allFirstIcs = document.querySelectorAll('li[data-type="ic"][data-index="0"]');
+            for (var i=0; i < allFirstIcs.length; i++) {
+              if (allFirstIcs[i].querySelectorAll('[data-index="1"]').length > 0) {
+                allFirstIcs[i].setAttribute('data-children', '1');
+              }
+              else {
+                allFirstIcs[i].setAttribute('data-children', '0');
+              }
+            }
+          
+            var verticalICsObject = {};
+            var parentColleaguesObject = {};
+            var nonICs = document.querySelectorAll('[data-type="non_ic"]');
+            for (var i=0; i < nonICs.length; i++) {
+              if (nonICs[i].querySelectorAll('ul').length > 1) {
+                nonICs[i].setAttribute('data-role', 'manager');
+              }
+            }
+
+            var managers = document.querySelectorAll('[data-role="manager"]');
+            for (var i=0; i < managers.length; i++) {
+                var allFirstIcsWithVerticalColleagues = managers[i].querySelectorAll('li[data-type="ic"][data-index="0"][data-children="1"]');
+                for (var a=0; a < allFirstIcsWithVerticalColleagues.length; a++) {
+                    if (allFirstIcsWithVerticalColleagues[a].closest('[data-type="non_ic"]').hasAttribute('data-role')) {
+                      allFirstIcsWithVerticalColleagues[a].setAttribute('data-category', 'parent-colleague');
+                    }
+                    else {
+                      allFirstIcsWithVerticalColleagues[a].removeAttribute('data-category');
+                    }
+                }
+            }
+
+            var allParentColleagues = document.querySelectorAll('[data-category="parent-colleague"]');
+            for (var i=0; i < allParentColleagues.length; i++) {
+                var userId = allParentColleagues[i].querySelectorAll('div.title')[0].textContent;
+                parentColleaguesObject[userId] = {
+                  value: userId
+                };
+                var li_colleauges = allParentColleagues[i].querySelectorAll('li[data-index="1"]');
+                for (var a=0; a < li_colleauges.length; a++) {
+                  var colleagueVal = li_colleauges[a].textContent;
+                  verticalICsObject[colleagueVal] = {
+                    parent_colleague: allParentColleagues[i].querySelectorAll('div.title')[0].textContent
+                  }
+                }
+            }
+          }
+          
+          /* Only for OrgCharts with Vertical ICs - END */         
+
+            var tags = {};
+            var existingTags = await miro.board.get({
+              type: ['tag'],
+            });
+          
+            if (existingTags.length > 0) {
+              for(var j=0; j < existingTags.length; j++) {
+                tags[existingTags[j].title] = existingTags[j];
+              }
+            }
+
+            async function createCard(title, description, color, x, y, width, height) {
+              if (hashTable[userId].hasOwnProperty('AMPED Stream')) { var stream = hashTable[userId]['AMPED Stream'].value.trim(); }
+              if (hashTable[userId].hasOwnProperty('AMPED Sub-Stream')) { var substream = hashTable[userId]['AMPED Sub-Stream'].value.trim(); }
+              var division = hashTable[userId]['Division'].value.trim();
+              var cardTags = [];
+
+              if (stream && stream != "") {
+                if (!tags.hasOwnProperty(stream)) {
+                  tags[stream] = await miro.board.createTag({
+                    title: stream,
+                    color: 'magenta'
+                  });
+                }
+                cardTags.push(tags[stream].id);
+              }
+              
+              if (stream && substream != "") {
+                if (!tags.hasOwnProperty(substream)) {
+                  tags[substream] = await miro.board.createTag({
+                    title: substream,
+                    color: 'dark_green'
+                  });
+                }
+                cardTags.push(tags[substream].id);
+              }
+              
+              if (division != "") {
+                if (!tags.hasOwnProperty(division)) {
+                  tags[division] = await miro.board.createTag({
+                    title: division,
+                    color: 'blue'
+                  });
+                }
+                cardTags.push(tags[division].id);
+              }
+
+              var shape = await miro.board.createCard({
+                    width: width,
+                    height: height,
+                    title: title,
+                    description: description,
+                    tagIds: cardTags,
+                    style: {
+                      cardTheme: color
+                    },
+                    x: x, // Default value: center of the board
+                    y: y // Default value: center of the board
+                });
+
+                return shape;
+            }
+
+            async function createShape(content, shapeType, color, x, y, width, height, fontSize, fontType){
+                var shape = await miro.board.createShape({
+                    content: content,
+                    shape: shapeType,
+                    style: {
+                        fillColor: color, // Default color: transparent (no fill)
+                        fontFamily: fontType, // Default font type for the text
+                        fontSize: fontSize, // Default font size in dp for the text
+                        textAlign: 'center', // Default alignment: center
+                        textAlignVertical: 'middle'
+                    },
+                    x: x, // Default value: center of the board
+                    y: y, // Default value: center of the board
+                    width: width,
+                    height: height
+                });
+
+                return shape;
+            }
+          
+            async function createText(content, color, x, y, width, fontSize, fontType, textAlign, height){
+                var properties = {
+                    content: content,
+                    height: height,
+                    width: width,
+                    style: {
+                        fillColor: color, // Default value: transparent (no fill)
+                        fillOpacity: 1, // Default value: 1 (solid color)
+                        fontFamily: fontType, // Default font type for the text
+                        fontSize: fontSize, // Default font size
+                        textAlign: textAlign, // Default alignment: left
+                    },
+                    x: x,
+                    y: y
+                }
+                var shape = await miro.board.createText(properties);
+                return shape;
+            }
+
+            var jqueryElements = document.getElementsByClassName('title');
+            var shapes = {};
+            var userId, x, y, width, height;
+            
+            /* Get Current Viewport Position on the Board */
+            var viewport = await miro.board.viewport.get();
+          
+            for(var i=0; i < jqueryElements.length; i++) {
+                userId = jqueryElements[i].textContent;
+                shapes[userId] = {
+                    shape: {}
+                };
+
+                /* Create Employee Cards */
+                console.log('========== Org Chart Shape index --> ' + i + ' ===========');
+                //if (hashTable[userId]['Name'].value !== '') {
+                  x = jqueryElements[i].getBoundingClientRect().x + (viewport.x + (viewport.width / 2));
+                  y = jqueryElements[i].getBoundingClientRect().y + (viewport.y + (viewport.height / 2));
+                  width = jqueryElements[i].getBoundingClientRect().width; // 1308.9694139611743
+                  height = jqueryElements[i].getBoundingClientRect().height; // 793.5627072139619
+                  var division = hashTable[userId]['Division'].value.trim();
+                  var role = hashTable[userId]['Job Title'].value;
+                  var nameVal = hashTable[userId]['Name'].value.trim();
+                  var department = hashTable[userId]['Department'].value.trim();
+                  var location = hashTable[userId]['Location'].value.trim();
+                  var email = hashTable[userId]['Work Email'].value;
+                  var name = '<p>' + nameVal + '</p>' + (role != '' ? ('<p>' + role + '</p>') : '') + '<p>' + email + '</p><p></br></p>' + (department != '' ? ('<p>' + department + '</p>') : '') + (location != '' ? ('<p>' + location + '</p>') : '');
+                  var descriptionVal = hashTable[userId].hasOwnProperty('Job Description') ? hashTable[userId]['Job Description'].value.trim() : '';
+                  descriptionVal = descriptionVal.replaceAll('\n', '<br>');
+                  var description = '<p>' + (descriptionVal != '' ? descriptionVal : '<span style="color: transparent">.</span>') + '</p>';
+                  var cardColor = '#2D9BF0';
+                  shapes[userId].shape['base'] = await createCard(name, description, cardColor, x, y, width, height);
+                  shapes[userId].shape['base'].user_id = userId;
+                  shapes[userId].shape['base'].manager_id = hashTable[userId].manager_id.value;             
+                  if (i === 0) { await miro.board.viewport.zoomTo(shapes[userId].shape['base']); }
+                //}
+            }
+
+            window.shapesGlobal = shapes;
+            var connectingLines = [];
+          
+          /* Flag Managers of Individual Contributors */
+            function flagICmanagers(object) {
+                if (object.hasOwnProperty('children')) {
+                    var array = object.children;
+                    var grandChildren = 0;
+                    var numberOfICs = 0;
+                    for(var i=0; i < array.length; i++) {
+                        if (array[i].hasOwnProperty('children') && array.length > 0) { grandChildren = 1 }
+                        if (!array[i].hasOwnProperty('children') && array.length == 1) { numberOfICs = 1 }
+                        array[i] = flagICmanagers(array[i]);
+                    }
+                    if (grandChildren == 0) {
+                      object.is_ic_manager = true;
+                      if (numberOfICs == 1) { object.is_single_ic_manager = true; }
+                    }
+                }
+                return object;
+            }
+
+            /* Flag Individual Contributors only */
+            function flagICs(object, hasICmanager, hasSameLevelColleagues) {
+                if (object.hasOwnProperty('children')) {
+                    var array = object.children;
+                    for(var i=0; i < array.length; i++) {
+                        var hasIcManager = object.hasOwnProperty('is_ic_manager');
+                        var colleagues = array.length > 1;
+                        array[i] = flagICs(array[i], hasIcManager, colleagues);
+                    }
+                }
+ 
+                else if (hasICmanager || (hasSameLevelColleagues && !object.hasOwnProperty('children'))) { object.is_ic = true; }
+                return object;
+            }
+          
+            var dataTreeForConnectingLines = flagICmanagers(dataTree[0]);
+            dataTreeForConnectingLines = flagICs(dataTreeForConnectingLines);
+          
+            function createConnectingLines(array, layout) {
+              for(var i=0; i < array.length; i++) {
+                  if (array[i].children) {
+                      for(var h=0; h < array[i].children.length; h++) {
+                        if (layout == 'hybrid') {
+                            if (verticalICsObject.hasOwnProperty(array[i].children[h].id.value)) {
+                              var parentColleagueVal = verticalICsObject[array[i].children[h].id.value].parent_colleague;
+                              var lineItem = {
+                                  start_element: shapes[parentColleagueVal].shape.base.id,
+                                  end_element: shapes[array[i].children[h].id.value].shape.base.id,
+                                  vertical_ic: true,
+                                  vertical_parent_colleague: true
+
+                              };
+                            }
+                            else if (parentColleaguesObject.hasOwnProperty(array[i].children[h].id.value)) {
+                              var lineItem = {
+                                  start_element: shapes[array[i].id.value].shape.base.id,
+                                  end_element: shapes[array[i].children[h].id.value].shape.base.id,
+                                  vertical_ic: true
+                              };
+                            }
+                            else {
+                              var lineItem = {
+                                  start_element: shapes[array[i].id.value].shape.base.id,
+                                  end_element: shapes[array[i].children[h].id.value].shape.base.id
+                              };
+
+                              if (array[i].hasOwnProperty('is_ic_manager') && !array[i].hasOwnProperty('is_single_ic_manager')) {
+                                lineItem.vertical_ic = true;
+                                lineItem.ic_only_manager = true;
+                              }
+
+                            }
+                              connectingLines.push(lineItem);
+                        }
+                        
+                        else if (layout == 'horizontal') {
+                            var lineItem = {
+                                start_element: shapes[array[i].id.value].shape.base.id,
+                                end_element: shapes[array[i].children[h].id.value].shape.base.id
+                            };
+                          connectingLines.push(lineItem);
+                        }
+                        
+                      }
+                      createConnectingLines(array[i].children, layout);
+                  }
+               }
+            }
+          
+            var connectingLinesArray = [];
+            connectingLinesArray.push(dataTreeForConnectingLines);
+
+            createConnectingLines(connectingLinesArray, orgchartLayout);
+            window.connectingLinesGlobal = connectingLines;
+            var linesArray = [...window.connectingLinesGlobal];
+
+            /* Web-SDK Connecting Lines - BEGIN */
+            if (orgchartLayout == 'hybrid') {
+              for (var i=0; i < linesArray.length; i++) {
+                  var isIConlyManager = linesArray[i].hasOwnProperty('ic_only_manager');
+                  var isVerticalIC = linesArray[i].hasOwnProperty('vertical_ic');
+                  var isParentColleague = linesArray[i].hasOwnProperty('vertical_parent_colleague');
+                  var connector = await miro.board.createConnector({
+                      'shape': 'elbowed',
+                      'start': {
+                        'item': linesArray[i].start_element,
+                        'position': {
+                          'x': isIConlyManager ? 0.035 : isParentColleague ? 0 : 0.5,
+                          'y': isParentColleague ? 0.5 : 1
+                        }
+                      },
+                      'end': {
+                        'item': linesArray[i].end_element,
+                        'position': {
+                          'x': isVerticalIC ? 0 : 0.5,
+                          'y': isVerticalIC ? 0.5 : 0
+                        }
+                      },
+                      'style': {
+                        'strokeColor': '#1a1a1a',
+                        'strokeWidth': 2,
+                        'endStrokeCap' : 'none'
+                      }
+                  });
+              }
+            }
+          
+            if (orgchartLayout == 'horizontal') {
+              for (var i=0; i < linesArray.length; i++) {
+
+                var connector = await miro.board.createConnector({
+                    'shape': 'elbowed',
+                    'start': {
+                      'item': linesArray[i].start_element,
+                      'position': {
+                        'x': 0.5,
+                        'y': 1
+                      }
+                    },
+                    'end': {
+                      'item': linesArray[i].end_element,
+                      'position': {
+                        'x': 0.5,
+                        'y': 0
+                      }
+                    },
+                    'style': {
+                      'strokeColor': '#1a1a1a',
+                      'strokeWidth': 2,
+                      'endStrokeCap': 'none'
+                    }
+                });
+              }
+            }
+            /* Web-SDK Connecting Lines - END */
+
+            document.getElementById('chart-container').innerHTML = '';
+            window.inProgress = false;
+            await miro.board.ui.openModal({
+                url:'finished_modal.html',
+                width: 400, 
+                height: 250 
+            });
+        }
+      
+        async function handleBroadcastedData(event) {
+            if (event && typeof event.data !== 'undefined') {
+                if (event.data.action == 'create_chart') {
+                    init(false, event.data.chart_layout, event.data.csv_content, event.data.csv_headers);
+                    await miro.board.ui.closeModal();
+                }
+            }
+        }
+
+        /* Listen to Post Messages from settings.html */
+        window.addEventListener("message", (event) => {
+            if (event.origin == "https://s3.eu-central-1.amazonaws.com") {
+                handleBroadcastedData(event);
+            }
+        }, false);
+      
+        self.onerror = function() { window.inProgress = false; }; 
+    }
+
+    async function initializeApp() {
+        // Enable the 'icon:click' event on the app icon
+        await miro.board.ui.on("icon:click", async () => {
+            // In this example: when the app icon is clicked, a method opens a panel
+            start();
+        });
+    }
+      
+    initializeApp();
+    </script>
+</body>
+</html>

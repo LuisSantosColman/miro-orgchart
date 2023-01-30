@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script id="miro-sdk2" src="https://miro.com/app/static/sdk/v2/miro.js"></script>
+    <link rel="icon" href="data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=">
+    <link rel="stylesheet" href="styles.css">
+    <script src="jquery.min.js"></script>
+    <style>
+        .overlay-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            height: 25rem;
+            align-items: center;
+            width: 100%;
+            top: 50%;
+            left: 50%;
+            position: absolute;
+            transform: translateX(-50%) translateY(-50%);
+        }
+
+        .overlay-content {
+            justify-content: center;
+            text-align: center;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .overlay-logo {
+            width: 160px;
+            height: 61px;
+            z-index: 1100;
+        }
+
+        .button-font {
+            font-family: 'Open Sans', sans-serif;
+            font-size: 16px;
+            font-weight: 300;
+        }
+
+        .oauth-form__warning-box {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+            background-color: var(--blue200);
+            border: solid 1px var(--blue300);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            line-height: 20px;
+            height: 56px;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay-wrapper" style="display:none">
+        <div class="overlay-content"> 
+            <div style="margin-left:20%; margin-right:auto" class="overlay-logo"> 
+                <img style="width:250px" src="https://miro-org.s3.eu-central-1.amazonaws.com/amped_org_chart.svg">
+            </div>
+            <div class="oauth-form__warning-box" style="margin-top:70px">
+                <span>
+                    <svg viewbox="0 0 24 24" id="icon-developed-by-miro" fill="none" xmlns="http://www.w3.org/2000/svg" style="min-width: 24px; margin-top: 5px;">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" fill="#4262FF"></path>
+                        <path d="M9.78375 11.53C9.39582 11.1254 8.75118 11.1187 8.35485 11.515L8.29289 11.577C7.89894 11.9709 7.90291 12.6109 8.30172 12.9999L11.077 15.7071L16.077 10.7071C16.4675 10.3166 16.4675 9.68342 16.077 9.29289C15.6864 8.90237 15.0533 8.90237 14.6627 9.29289L11.077 12.8787L9.78375 11.53Z" fill="#4262FF"></path>
+                    </svg>
+                </span>
+                <span style="padding: 0 7px 0 7px;">Organization chart created successfully</span>
+            </div>
+            <div style="cursor: pointer; margin-left: 40%; margin-top: 30px; margin-right: 40%">
+                <button style="margin-bottom: 7px" class="button button-primary button-small button-font">Close</button>
+            </div>
+        </div>
+      </div>
+    <script type="text/javascript">
+        async function closeMiroModal() {
+            await miro.board.ui.closeModal();
+        }
+        document.querySelector('button').onclick = function() { closeMiroModal() };
+        $('.overlay-wrapper').fadeIn();
+    </script>
+</body>
+</html>

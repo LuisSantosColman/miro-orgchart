@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script id="miro-sdk2" src="https://miro.com/app/static/sdk/v2/miro.js"></script>    
+    <title>Miro OrgChart App</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="jquery.min.js"></script>
+    <link rel="icon" href="data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        @font-face { font-family: Roboto; src: url('fonts/Roboto-Medium.ttf'); } 
+        .overlay-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            height: 25rem;
+            align-items: center;
+            width: 100%;
+            top: 50%;
+            left: 50%;
+            position: absolute;
+            transform: translateX(-50%) translateY(-50%);
+        }
+
+        .overlay-content {
+            justify-content: center;
+            text-align: center;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .loading-font {
+            font-family: 'Open Sans', sans-serif;
+            font-size: 16px;
+            font-weight: 300;
+        }
+
+        .spinner:after {
+            -webkit-animation: spinning .5s linear infinite;
+            animation: spinning .5s linear infinite;
+            border-left: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+            border-radius: 9999px;
+            border: 2px solid #000;
+            border-right: 2px solid transparent;
+            border-top: 2px solid transparent;
+            content: "";
+            display: block;
+            height: 1em;
+            width: 1em;
+            left: -10.5px;
+            position: absolute;
+            top: 1.3px;
+        }
+
+        .button-font {
+            font-family: 'Open Sans', sans-serif;
+            font-size: 16px;
+            font-weight: 300;
+        }
+
+         .title-font {
+            font-family: 'Open Sans', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .overlay-logo {
+            width: 160px;
+            height: 61px;
+            z-index: 1100;
+        }
+
+        .oauth-form__warning-box {
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+            background-color: var(--blue200);
+            border: solid 1px var(--blue300);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            line-height: 20px;
+            height: 56px;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+
+        .oauth-form__footer-buttons {
+            display: flex;
+        }
+
+        .oauth-form__next-step-info {
+            margin-top: 7px;
+            font-size: 12px;
+            line-height: 18px;
+            color: var(--indigo600);
+        }
+       
+       .out-of-screen {
+         margin-left: -1000px !important;
+       }
+       
+       .further-out-of-screen {
+         margin-left: -2000px;
+       }
+       
+       .into-screen {
+         margin-left: 0 !important;
+       }
+       
+       .orgchart_layout_checked {
+         outline: 2.5px solid #4262ff;
+         outline-offset: 6px;
+       }
+
+       .feedback-text {
+          font-size: 12px;
+          text-decoration: underline;
+          text-underline-offset: 4px;
+          text-decoration-color: #5f5c8038;
+          -webkit-text-decoration-color: #5f5c8038;
+          -moz-text-decoration-color: #5f5c8038;
+          transition: 0.5s;
+          color: #5f5c80;
+        }
+
+        .feedback-text:hover{
+          text-decoration-color: #5f5c80;
+          text-underline-offset: 4px;
+          -webkit-text-decoration-color: #5f5c80;
+          -moz-text-decoration-color: #5f5c80;
+        }
+
+        .feedback-text:visited {
+          text-decoration: underline;
+          text-underline-offset: 4px;
+          text-decoration-color: #5f5c8038;
+          -webkit-text-decoration-color: #5f5c8038;
+          -moz-text-decoration-color: #5f5c8038;
+          color: #5f5c8038;
+        }
+
+        /* Google Button Styling */
+        .abcRioButton {
+          border-radius: 1px;
+          /* box-shadow: 0 2px 4px 0 rgba(0, 0, 0, .25); */
+          -moz-box-sizing: border-box;
+          box-sizing: border-box;
+          -webkit-transition: background-color .218s, border-color .218s, box-shadow .218s;
+          transition: background-color .218s, border-color .218s, box-shadow .218s;
+          -webkit-user-select: none;
+          -webkit-appearance: none;
+          background-color: #fff;
+          background-image: none;
+          color: #262626;
+          cursor: pointer;
+          outline: none;
+          overflow: hidden;
+          position: relative;
+          text-align: center;
+          vertical-align: middle;
+          white-space: nowrap;
+          width: auto
+        }
+
+        .abcRioButton:hover {
+            box-shadow: 0 0 3px 3px rgba(66, 133, 244, .3)
+        }
+
+        .abcRioButtonBlue {
+            background-color: #4285f4;
+            border: none;
+            color: #fff
+        }
+
+        .abcRioButtonBlue:hover {
+            background-color: #4285f4
+        }
+
+        .abcRioButtonBlue:active {
+            background-color: #3367d6
+        }
+
+        .abcRioButtonLightBlue {
+            background-color: #fff;
+            color: #757575
+        }
+
+        .abcRioButtonLightBlue:active {
+            background-color: #eee;
+            color: #6d6d6d
+        }
+
+        .abcRioButtonIcon {
+            float: left
+        }
+
+        .abcRioButtonBlue .abcRioButtonIcon {
+            background-color: #fff;
+            border-radius: 1px
+        }
+
+        .abcRioButtonSvg {
+            display: block
+        }
+
+        .abcRioButtonContents {
+            font-family: Roboto, arial, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: .21px;
+            margin-left: 6px;
+            margin-right: 6px;
+            vertical-align: top
+        }
+
+        .abcRioButtonContentWrapper {
+            height: 100%;
+            width: 100%
+        }
+
+        .abcRioButtonBlue .abcRioButtonContentWrapper {
+            border: 1px solid transparent
+        }
+
+        .abcRioButtonErrorWrapper,
+        .abcRioButtonWorkingWrapper {
+            display: none;
+            height: 100%;
+            width: 100%
+        }
+
+        .abcRioButtonErrorIcon,
+        .abcRioButtonWorkingIcon {
+            margin-left: auto;
+            margin-right: auto
+        }
+
+        .abcRioButtonErrorState,
+        .abcRioButtonWorkingState {
+            border: 1px solid #d5d5d5;
+            border: 1px solid rgba(0, 0, 0, .17);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, .05);
+            color: #262626
+        }
+
+        .abcRioButtonErrorState:hover,
+        .abcRioButtonWorkingState:hover {
+            border: 1px solid #aaa;
+            border: 1px solid rgba(0, 0, 0, .25);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, .1)
+        }
+
+        .abcRioButtonErrorState:active,
+        .abcRioButtonWorkingState:active {
+            border: 1px solid #aaa;
+            border: 1px solid rgba(0, 0, 0, .25);
+            box-shadow: inset 0 1px 0 #ddd;
+            color: #262626
+        }
+
+        .abcRioButtonWorkingState,
+        .abcRioButtonWorkingState:hover {
+            background-color: #f5f5f5
+        }
+
+        .abcRioButtonWorkingState:active {
+            background-color: #e5e5e5
+        }
+
+        .abcRioButtonErrorState,
+        .abcRioButtonErrorState:hover {
+            background-color: #fff
+        }
+
+        .abcRioButtonErrorState:active {
+            background-color: #e5e5e5
+        }
+
+        .abcRioButtonErrorState .abcRioButtonErrorWrapper,
+        .abcRioButtonWorkingState .abcRioButtonWorkingWrapper {
+            display: block
+        }
+
+        .abcRioButtonErrorState .abcRioButtonContentWrapper,
+        .abcRioButtonErrorState .abcRioButtonWorkingWrapper,
+        .abcRioButtonWorkingState .abcRioButtonContentWrapper {
+            display: none
+        }
+
+        .-webkit-keyframes abcRioButtonWorkingIconPathSpinKeyframes {
+            0% {
+                -webkit-transform: rotate(0deg)
+            }
+        }
+      </style>
+</head>
+<body>
+  
+  <div id="overlay_wrapper1" class="overlay-wrapper" style="opacity: 0; max-width: 500px; transition: all 700ms">
+    <div class="overlay-content" id="step1_content" style="/*height: 311px; margin-top: 52px*/"> 
+      <div class="h1 centered" style="margin-bottom: 40px; margin-top: 5px;">Org Chart - Choose layout</div>
+      <div>
+          <form id="orgchart_layout">
+              <div class="grid" style="padding: 0; grid-column-gap: 45px; grid-row-gap: 30px;">
+                  <div id="orgchart_layout_horizontal_container" class="cs1 ce6 placeholder" style="height: 120px;">
+                      <label class="centered" style="cursor: pointer; border: 2px #0909091f solid; width: 163px; margin-left: auto; border-radius: 8px; position: relative;">
+                          <label class="checkbox" style="position: absolute; top: 0.5rem; left: 0.5rem">
+                              <input type="checkbox" name="orgchart_layout" data-testid="checkbox-input" aria-hidden="true" value="horizontal">
+                              <span></span>
+                          </label>
+                              <img src="https://cdn.glitch.global/106d1154-e89c-405e-92cf-5c466735ade0/horizontal_orgchart_icon.svg?v=1672709052902" style="max-width: 84%"/>
+                      </label>
+                      <div style="margin-left: 50px;font-size: 14px;margin-top: 10px;">Horizontal</div>
+                  </div>
+                  <div id="orgchart_layout_hybrid_container" class="cs7 ce12 placeholder" style="height: 120px;">
+                      <label class="centered" style="cursor: pointer; border: 2px #0909091f solid; width: 163px; margin-right: auto; border-radius: 8px; position: relative;">
+                          <label class="checkbox" style="position: absolute; top: 0.5rem; left: 0.5rem">
+                              <input type="checkbox" name="orgchart_layout" data-testid="checkbox-input" aria-hidden="true" value="hybrid">
+                              <span></span>
+                          </label>
+                              <img src="https://cdn.glitch.global/106d1154-e89c-405e-92cf-5c466735ade0/hybrid_orgchart_icon.svg?v=1672709786970" style="max-width: 84%"/>
+                      </label>
+                      <div style="margin-right: 65px;font-size: 14px;margin-top: 10px;">Hybrid</div>
+                  </div>
+              </div>
+          </form>
+      </div>
+      <div id="orgchart_shape_buttons" style="max-width: 360px; margin: 0 0 0 57px;">
+          <div style="margin-top: 40px;text-align: left;">
+              <div class="oauth-form__footer">
+                  <div class="oauth-form__footer-buttons" style="text-align: left;display: block;margin-top: 56px;">
+                      <button type="button" class="button button-primary button button-font" id="move_to_step2" tabindex="0" style="padding: 0 24px; min-width: 172px; margin-bottom: 0;" disabled="disabled">Next</button>
+                  </div>
+                  <div class="oauth-form__next-step-info" style="display: block; text-align: left; margin: 7px 0 0 0">Next: Select data source</div>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
+
+  
+  <div id="overlay_wrapper2" class="overlay-wrapper" style="opacity: 1; margin-left: 1000px; transition: all 700ms">
+    <div class="overlay-content" id="step2_content" style="height: 311px;/*margin-top: 52px*/"> 
+      <div style="margin-left:auto; margin-right:auto" class="overlay-logo"> 
+        <div style="max-width:151px">
+          <svg width="40.203mm" height="15.521mm" version="1.1" viewbox="0 0 40.202938 15.520978" xmlns="http://www.w3.org/2000/svg"> <g transform="translate(-64.888 -53.996)"> <path d="m64.888 53.996h15.521v15.521h-15.521z" fill="none" stroke-width=".38802"/> <path d="m68.962 59.429h7.5665v6.2084h-7.5665z" fill="#fff" stroke-width=".38802"/> <path d="m74.201 58.653 2.7162 1.2029 0.77605-1.5909-3.4922-3.4922-0.97006 1.6297z" fill="#188038" stroke-width=".38802"/> <path d="m73.037 62.921h1.9401v1.1641h-1.9401zm-2.7162-1.9401h1.9401v1.1641h-1.9401z" fill="#34a853" stroke-width=".38802"/> <path d="m74.201 58.265v-3.4922h-5.4323c-0.65964 0-1.1641 0.50443-1.1641 1.1641v11.641c0 0.65964 0.50443 1.1641 1.1641 1.1641h7.7605c0.65964 0 1.1641-0.50443 1.1641-1.1641v-9.3126zm1.5521 6.5964h-6.2084v-4.6563h6.2084z" fill="#34a853" stroke-width=".38802"/> <path d="m70.32 62.921h1.9401v1.1641h-1.9401zm2.7162-1.9401h1.9401v1.1641h-1.9401z" fill="#34a853" stroke-width=".38802"/> <g transform="matrix(.26458 0 0 .26458 82.38 57.826)" fill="none"> <path d="m12.058 23.333h-10.058a0.667 0.667 0 0 0 0 1.334h10.058l-3.724 3.723a0.667 0.667 0 0 0 0.943 0.943l5.333-5.333-5.333-5.333a0.667 0.667 0 1 0-0.943 0.942zm-8.116-14.666h10.058a0.667 0.667 0 1 0 0-1.334h-10.058l3.724-3.723a0.667 0.667 0 0 0-0.943-0.943l-5.333 5.333 5.333 5.333a0.667 0.667 0 1 0 0.943-0.942z" clip-rule="evenodd" fill="#5f5c80" fill-rule="evenodd"/> </g> <g transform="matrix(.31592 0 0 .31592 91.191 54.848)"> <path d="m0 6.875c0-3.797 3.078-6.875 6.875-6.875h30.25c3.797 0 6.875 3.078 6.875 6.875v30.25c0 3.797-3.078 6.875-6.875 6.875h-30.25c-3.797 0-6.875-3.078-6.875-6.875z" fill="#ffd02f"/> <path d="m30.432 5.5h-4.8293l4.0244 7.0714-8.8536-7.0714h-4.8293l4.4268 8.6429-9.2561-8.6429h-4.8292l4.8292 11-4.8292 22h4.8292l9.2561-23.571-4.4268 23.571h4.8293l8.8536-25.143-4.0244 25.143h4.8293l8.8537-27.5z" clip-rule="evenodd" fill="#050038" fill-rule="evenodd"/> </g> </g> </svg>
+        </div>
+      </div>
+      <div class="title-font" style="margin: 30px 0 4px 0; text-align: center"><span>Org Chart - Choose data source</span></div>
+      <form id="spreadsheet_type" style="width: 412px; transition: height 2s; margin-left: 0">
+        <label class="radiobutton" style="font-size: 16px; font-weight: normal; margin: 25px 0 16px 0; display: none;">
+          <input type="radio" name="data_input_type" value="google_sheets">
+          <span>Import from Google Sheets</span>
+        </label>
+        <div id="connect_google_sheets" style="display: none;">
+          
+          <!-- Logged into Google section begin -->
+            <div id="is_logged_into_google" class="oauth-form__warning-box" style="margin: 0 0 0 32px; height: 46px; width: 265px">
+              <span style="margin-bottom: -5px">
+                  <svg viewbox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+                    <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
+                      <path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 53.749 L -8.284 53.749 C -8.574 55.229 -9.424 56.479 -10.684 57.329 L -10.684 60.329 L -6.824 60.329 C -4.564 58.239 -3.264 55.159 -3.264 51.509 Z"></path>
+                      <path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L -10.684 57.329 C -11.764 58.049 -13.134 58.489 -14.754 58.489 C -17.884 58.489 -20.534 56.379 -21.484 53.529 L -25.464 53.529 L -25.464 56.619 C -23.494 60.539 -19.444 63.239 -14.754 63.239 Z"></path>
+                      <path fill="#FBBC05" d="M -21.484 53.529 C -21.734 52.809 -21.864 52.039 -21.864 51.239 C -21.864 50.439 -21.724 49.669 -21.484 48.949 L -21.484 45.859 L -25.464 45.859 C -26.284 47.479 -26.754 49.299 -26.754 51.239 C -26.754 53.179 -26.284 54.999 -25.464 56.619 L -21.484 53.529 Z"></path>
+                      <path fill="#EA4335" d="M -14.754 43.989 C -12.984 43.989 -11.404 44.599 -10.154 45.789 L -6.734 42.369 C -8.804 40.429 -11.514 39.239 -14.754 39.239 C -19.444 39.239 -23.494 41.939 -25.464 45.859 L -21.484 48.949 C -20.534 46.099 -17.884 43.989 -14.754 43.989 Z"></path>
+                    </g>
+                  </svg>
+              </span>
+              <span style="padding: 0 7px 0 7px; font-size: 12px">Logged into Google<strong id="logged-in-user" style="padding-left: 3px"></strong></span>
+              <span style="position: relative">
+                  |
+                <span id="sign_out_link" class="sign_out_link">
+                  <svg fill="none" viewbox="0 0 24 24" id="36d046dba42f300f494684f6471b07bd" xmlns="http://www.w3.org/2000/svg" width="16px" style="position: absolute; top: 2.5px; margin-left: 5px">
+                      <path fill-rule="evenodd" clip-rule="evenodd" d="M5 3a3 3 0 00-3 3v12a3 3 0 003 3h9v-2H5a1 1 0 01-1-1V6a1 1 0 011-1h9V3H5zm16.83 9.557a1 1 0 00-.128-1.27l-3.995-3.994a1 1 0 10-1.414 1.414L18.586 11H11a1 1 0 100 2h7.586l-2.293 2.293a1 1 0 001.414 1.414l3.995-3.995a.997.997 0 00.128-.155z" fill="currentColor"></path>
+                  </svg>
+                  <a id="google_logout" href="#" style="padding: 0 7px 0 7px; text-decoration: none; margin-left: 19px; font-size: 12px">Sign out</a>
+                  </span>
+              </span>
+            </div>
+         <!-- Logged into Google section end -->
+          <div style="text-align: left;">
+              <div class="oauth-form__footer">
+                 <div class="oauth-form__footer-buttons" style="display: block; text-align: left">
+                  </div>
+              </div>
+          </div>
+        </div>
+        <label class="radiobutton" style="font-size: 16px; font-weight: normal; margin: 20px 0 20px 0">
+          <input type="radio" name="data_input_type" value="csv">
+          <span>Upload CSV file</span>
+        </label>
+        <div id="choose_datasource_buttons" style="text-align: left">
+          <div style="text-align: left;">
+              <div class="oauth-form__footer">
+                 <div class="oauth-form__footer-buttons" style="display: block; text-align: left">
+                      <button id="back_to_step1" class="button button-secondary button button-font" type="button" tabindex="0" style="margin: 7px 0 0 0; min-width: 151px">Go back</button>
+                      <button id="google_login" type="button" class="button button-primary button button-font" tabindex="0" style="display: none; padding: 0 24px; min-width: 172px; margin: 7px 0 0 16px">Sign in to Google</button>
+                      <button id="move_to_step3_google" type="button" class="button button-primary button button-font" tabindex="0" style="display: none; padding: 0 24px; min-width: 172px; margin: 7px 0 0 16px">Next</button>
+                      <button id="move_to_step3" type="button" class="button button-primary button button-font" tabindex="0" style="display: none; padding: 0 24px; min-width: 172px; margin: 7px 0 0 16px">Next</button>
+                  </div>
+              </div>
+          </div>
+        </div>
+      </form>
+  </div>
+</div>
+
+  
+
+<div id="overlay_wrapper3" class="overlay-wrapper" style="opacity: 1; margin-left: 2000px; transition: all 700ms">
+        <div class="overlay-content"> 
+            <div style="margin-left:auto; margin-right:auto; width: 430px"> 
+                <img style="max-width:131px; margin-bottom: 24px" src="https://miro-org.s3.eu-central-1.amazonaws.com/amped_org_chart_logo.svg">
+            <div id="scroll_area" style="overflow-y: auto;">
+                <div class="alert alert-success title-font" style="margin: 0 0 24px">Org Chart - Upload CSV file</div>
+                <div class="form-group-small" style="text-align: left;">
+                    <ol style="font-size: 14px;margin: 0 0 0 -25px">
+                      <li style="margin: 10px 0 10px 0">Download <a style="text-decoration: none; color: #4262ff" href="data:application/octet-stream,%22Name%22%2C%22Work%20Email%22%2C%22Job%20Title%22%2C%22Division%22%2C%22Department%22%2C%22Location%22%2C%22Job%20Description%22%2C%22Manager%20Email%20Address%22%0A%22John%20Doe%22%2C%22john.doe%40miro.com%22%2C%22CEO%22%2C%22Management%22%2C%22Executive%22%2C%22Amsterdam%22%2C%22Head%20of%20the%20Organization%22%2C%22%22%0A%22Mark%20Smith%22%2C%22mark.smith%40miro.com%22%2C%22Vice%20President%22%2C%22Management%22%2C%22Executive%22%2C%22Amsterdam%22%2C%22Vice%20President%20of%20the%20Organization%22%2C%22john.doe%40miro.com%22" download="Miro_OrgChart_Template.csv">
+                          this CSV template</a></li>
+                      <li style="margin: 10px 0 10px 0">Fill in the CSV template from step 1 with your org chart data<br><span style="font-size: 12px"><strong>Note</strong>: headers must not be modified</span></li>
+                      <li style="margin: 10px 0 10px 0">Upload the completed template below in <strong>.csv</strong> format</li>
+                    </ol>
+                    <div style="margin: 12px 0 0 0" class="input-field-block">
+                      <label id="file_input_wrapper" class="button button-primary button-small" style="max-width: 77px; display: inline-table; margin-bottom: 0; margin-right: 12px">Choose file
+	    	              <input type="file" id="file" size="50" accept=".csv" style="display:none">
+                      </label>
+                      <span id="file_name" style="display: inline-table; margin-top: 10px; vertical-align: middle; font-size: 12px">No file chosen</span>
+                    </div>
+                    <div id="file_error" style="display: none; color: red; margin: 7px 0 -1px 0; font-size: 12px"></div>
+                </div>
+            </div>
+                 <label class="checkbox" style="margin-bottom: 24px; display: none">
+                </label>
+                <div style="margin-top: 25px; text-align: left;">
+                    <div class="oauth-form__footer">
+                       <div class="oauth-form__footer-buttons">
+                           <button id="back_to_step2" class="button button-secondary button button-font" type="button" tabindex="0" style="min-width: 151px; margin: 0 16px 0 0">Go back</button>
+                           <button id="create_chart" type="button" class="button button-primary button button-font" tabindex="0" style="padding: 0 24px; min-width: 160px; margin-bottom: 0" disabled="disabled">Create chart</button>
+                           <span id="create_chart_csv_processing" style="cursor: not-allowed; display: none"><button type="button" class="button button-primary button-loading" tabindex="0" style="padding: 0 24px; min-width: 160px; margin-bottom: 0; pointer-events: none"></button></span>
+                       </div>
+                        <div class="oauth-form__next-step-info">Next: You will be taken back to the board</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  
+  <div id="overlay_wrapper4" class="overlay-wrapper" style="opacity: 1; margin-left: 3000px; transition: all 700ms">
+        <div class="overlay-content"> 
+            <div style="margin-left:auto; margin-right:auto; width: 430px"> 
+              <img style="max-width:131px; margin-bottom: 12px" src="https://miro-org.s3.eu-central-1.amazonaws.com/amped_org_chart_logo.svg">
+              <div id="scroll_area2" style="overflow-y: auto;">
+                <div class="alert alert-success title-font" style="margin: 0 0 25px">Org Chart - Google Sheets</div>
+                <div class="form-group-small" style="text-align: left; max-width: 435px">
+                      <ol style="font-size: 14px;margin: 0 0 0 -25px">
+                        <li style="margin: 10px 0 10px 0">Make a copy of <a style="text-decoration: none; color: #4262ff" href="https://docs.google.com/spreadsheets/d/1Cx-sJVlcMJ7Zmhtac1s5TjPcqlz8UfQ04f_YHeE2m_M/copy" target="_blank">this Google Sheet</a></li>
+                        <li style="margin: 10px 0 10px 0">Fill in the new spreadsheet with your data in Google Sheets<br><span style="font-size: 12px"><strong>Note</strong>: headers must not be modified</span></li>
+                        <li style="margin: 10px 0 10px 0">Copy your Google Sheet URL from your browser address bar</li>
+                        <li style="margin: 10px 0 10px 0">Paste the Google Sheet URL below:
+                          <div style="margin: 10px 0 7px -10px; text-align: left" class="input-field-block">
+                            <input id="google_sheets_url" class="input input-small sheet-field" type="text" placeholder="https://docs.google.com/spreadsheets/d/1sKr6YklK7e3fv-yDr7bGx9Gnvxsdfsdfsdfsd/edit#gid=0" style="display: inline-block; max-width: 395px; height: 25px;">
+                          </div>
+                          <div id="google_sheets_error" style="display: none; color: red; margin: 0 0 0 -10px; font-size: 12px">XXXX</div>
+                        </li>
+                      </ol>
+                </div>
+              </div>
+                <div style="margin-top: 10px; text-align: left;">
+                    <div class="oauth-form__footer">
+                       <div class="oauth-form__footer-buttons">
+                           <button id="back_to_step2_google" class="button button-secondary button button-font" type="button" tabindex="0" style="min-width: 151px; margin: 0 16px 0 0">Go back</button>
+                           <!-- Official Google Button begin -->
+                           <div id="create_chart_google" style="opacity: 0.4; pointer-events: none">
+                            <div style="height:48px;width:240px;" class="abcRioButton abcRioButtonBlue"><div class="abcRioButtonContentWrapper"><div class="abcRioButtonIcon" style="padding:14px;"><div style="width:18px;height:18px;" class="abcRioButtonSvgImageWithFallback abcRioButtonIconImage abcRioButtonIconImage18"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 48 48" class="abcRioButtonSvg"><g><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path><path fill="none" d="M0 0h48v48H0z"></path></g></svg></div></div><span style="font-size:16px;line-height:48px;" class="abcRioButtonContents"><span id="not_signed_in98dmlg55wx">Sign in with Google</span><span id="connected98dmlg55wx" style="display:none">Signed in with Google</span></span></div></div></div>
+                           <!-- Official Google Button end -->
+                           <!-- <button id="create_chart_google_old" style="display:none" type="button" class="button button-primary button button-font" tabindex="0" style="padding: 0 24px; min-width: 160px; margin-bottom: 0" disabled="disabled">Create chart</button>-->
+                           <span id="create_chart_google_processing" style="cursor: not-allowed; display: none"><button type="button" class="button button-primary button-loading" tabindex="0" style="padding: 0 24px; min-width: 160px; margin-bottom: 0; pointer-events: none"></button></span>
+                       </div>
+                        <div class="oauth-form__next-step-info">Next: You will be prompted to sign into Google</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="feedback_wrapper" style="position: fixed; bottom: 0; right: 0;">
+      <div>
+        <a class="feedback-text" href="https://forms.gle/dHYD24enfGyET5789" target="_blank">Send feedback</a>
+      </div>
+    </div>
+    <script>
+    
+    var tokenClient = null;
+    var access_token = null;
+
+    /* Update UI based on Google Authentication */
+    async function updateSignInStatus() {
+      var isGoogleOptionChecked = document.querySelector('input[name="data_input_type"]:checked');
+      if (access_token !== null) {
+        if (isGoogleOptionChecked) {
+          if (isGoogleOptionChecked.value == 'google_sheets') {
+            document.getElementById('google_login').style.display = 'none';
+            $('#connect_google_sheets').fadeIn();
+            $('#move_to_step3_google').fadeIn(); 
+          }
+        }
+      }
+      else {
+        if (isGoogleOptionChecked) {
+          document.getElementById('connect_google_sheets').style.display = 'none';
+          document.getElementById('move_to_step3_google').style.display = 'none';
+          $('#google_login').fadeIn();
+        }
+      }
+      displayContent('overlay_wrapper1');
+    }
+
+    /* Google gapi function - not relevant for local CSV file upload */
+    function gapiStart() {
+        gapi.client.init({
+      }).then(function() {
+        gapi.client.load('sheets', 'v4');
+      }).then(function(response) {
+        updateSignInStatus();
+      }, function(reason) {
+        console.log('Error: ' + reason.result.error.message);
+      });
+    }
+
+    /* Load Google's gapi - not relevant for local CSV file upload */
+    function gapiLoad() {
+      gapi.load('client', gapiStart)
+    }
+
+    /* Google Identity Services function - Not relevant for local CSV file upload*/
+    async function gisInit() {
+      tokenClient = await google.accounts.oauth2.initTokenClient({
+        client_id: '612967825582-4kq94r9uvjpvii379ebaqrtudjgpds05.apps.googleusercontent.com',
+        scope: 'https://www.googleapis.com/auth/spreadsheets.readonly',
+        callback: (tokenResponse) => {
+          access_token = tokenResponse.access_token;
+          broadcastAction('create_chart_google',mainAppFrame)
+        },
+      });
+    }
+
+    /* Get Google API Token */
+    function getToken() {
+      tokenClient.requestAccessToken();
+    }
+    
+    /* Revoke Google API Token */
+    function revokeToken() {
+      google.accounts.oauth2.revoke(access_token, () => {
+        access_token = null;
+        updateSignInStatus();
+      });
+    }
+    
+    /* Activate/Deactivate UI Buttons */
+    function activateButton(reference, target) {
+      var referenceElement = document.getElementById(reference);
+      var targetElement = document.getElementById(target);
+      if (reference == 'file') {
+        if (referenceElement.value != '') {
+          targetElement.removeAttribute('disabled');
+        } else {
+          targetElement.setAttribute('disabled','disabled');
+        }
+      }
+      else if (reference == 'orgchart_layout') {
+        if (document.querySelector('input[name="orgchart_layout"]:checked')) {
+          targetElement.removeAttribute('disabled');
+        } else {
+          targetElement.setAttribute('disabled','disabled');
+        }
+      }
+      else if (reference == 'google_sheets_url') {
+        if (referenceElement.value.indexOf('https://docs.google.com/spreadsheets/') !== -1) {
+          targetElement.removeAttribute('disabled');
+          targetElement.style = '';
+
+        } else {
+          targetElement.setAttribute('disabled','disabled');
+          targetElement.style = 'opacity: 0.4; pointer-events: none';
+        }
+      }
+    }
+      
+    /* Attach Event Listeners */
+    document.getElementById('file').oninput = function(){ activateButton('file', 'create_chart') };
+    document.getElementById('file_input_wrapper').onclick = function() { 
+      document.getElementById('file_error').style.display = 'none';
+      document.getElementById('file_error').innerHTML = '';
+    };
+    document.getElementById('google_sheets_url').oninput = function(){ 
+      activateButton('google_sheets_url', 'create_chart_google') 
+    };
+    
+    var googleSheetsErrorDiv = document.getElementById('google_sheets_error');
+    var fileContentErrorDiv = document.getElementById('file_error');
+      
+    document.getElementById('google_sheets_url').onfocus = function(){ 
+      googleSheetsErrorDiv.innerHTML = '';
+      googleSheetsErrorDiv.style.display = 'none';
+    };
+      
+    /* Onchange Event Listener - Controls the styling of the OrgChart Layout icons depending on selection */
+    $('input[name="orgchart_layout"]').change(function(e) {
+      if(this.checked) {
+        var checkedEl = this;
+        $(this).closest('.centered').addClass('orgchart_layout_checked');
+        $('input[name="orgchart_layout"]').each(function(e) {
+            if (this != checkedEl) {
+                this.checked = false;
+                $(this).closest('.centered').removeClass('orgchart_layout_checked');
+            }
+        });
+      }
+      else {
+        $(this).closest('.centered').removeClass('orgchart_layout_checked');
+      }
+      activateButton('orgchart_layout', 'move_to_step2');
+    });
+    
+    /* 
+      Onchange Event Listener - Controls the Buttons to display and show depending on the data source selected,
+      either Google Sheets or local CSV upload 
+    */
+    document.getElementById('spreadsheet_type').addEventListener('change', (e) => {
+      if (e.target.value === 'google_sheets') {
+        document.getElementById('move_to_step3').style.display = 'none';
+          $('#move_to_step3_google').fadeIn();
+      }
+      else if (e.target.value === 'csv') {
+        document.getElementById('connect_google_sheets').style.display = 'none';
+        document.getElementById('move_to_step3_google').style.display = 'none';
+        document.getElementById('google_login').style.display = 'none';
+        $('#move_to_step3').fadeIn();
+      }
+    });
+      
+    /* Click Event Listeners - Controls the carousel view when moving between the steps back and forth */
+    document.getElementById('move_to_step2').addEventListener('click', function(e){
+      document.getElementById('overlay_wrapper1').style.marginLeft = '-1000px';
+      document.getElementById('overlay_wrapper2').style.marginLeft = '0';
+    });
+      
+    document.getElementById('back_to_step1').addEventListener('click', function(e){
+      document.getElementById('overlay_wrapper2').style.marginLeft = '1000px';
+      document.getElementById('overlay_wrapper1').style.marginLeft = '0';
+    });
+      
+    document.getElementById('move_to_step3').addEventListener('click', function(e){
+      document.getElementById('overlay_wrapper2').style.marginLeft = '-1000px';
+      document.getElementById('overlay_wrapper3').style.marginLeft = '0';
+    });
+      
+    document.getElementById('back_to_step2').addEventListener('click', function(e){
+      document.getElementById('overlay_wrapper3').style.marginLeft = '1000px';
+      document.getElementById('overlay_wrapper2').style.marginLeft = '0';
+    });
+      
+    document.getElementById('move_to_step3_google').addEventListener('click', function(e){
+      document.getElementById('overlay_wrapper2').style.marginLeft = '-1000px';
+      document.getElementById('overlay_wrapper4').style.marginLeft = '0';
+    });
+      
+    document.getElementById('back_to_step2_google').addEventListener('click', function(e){
+      document.getElementById('overlay_wrapper4').style.marginLeft = '1000px';
+      document.getElementById('overlay_wrapper2').style.marginLeft = '0';
+    });
+    
+    /* Upload Event Listener - Displays the name of the file uploaded or if no file has been uploaded */
+    document.getElementById('file').addEventListener('change', (e) => {
+      var name = e.target;
+      document.getElementById('file_name').innerHTML = name.files.item(0) ? name.files.item(0).name : 'No file chosen';
+    });
+
+    var settingsModalUrl;
+    
+    /* Captures the main frame app.html to communicate later on */
+    var parentFrames = window.parent.frames;
+    var mainAppFrame;
+    for(var a=0; a < parentFrames.length; a++) {
+        var sameOrigin;
+        try {
+            sameOrigin = (window.parent.frames[a].location.host == window.location.host);
+        }
+        catch(e) {
+            sameOrigin = false;
+        }
+        if (sameOrigin) {
+            if (parentFrames[a].location.pathname == '/orgchart.miroapplications.com/public_app.html') {
+              mainAppFrame = parentFrames[a];
+              break;
+            }
+        }
+    }
+      
+    function getParameterByName(name) {
+      name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+      var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+      results = regex.exec(location.search);
+      return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
+
+    /* Pure JS fadeIn effect */
+    function fadeInJS(el, time) {
+        if (el.style.opacity <= 0) {
+            var last = +new Date();
+            var tick = function() {
+                el.style.opacity = +el.style.opacity + (new Date() - last) / time;
+                last = +new Date();
+
+                if (+el.style.opacity < 1) {
+                    (window.requestAnimationFrame && requestAnimationFrame(tick)) || setTimeout(tick, 16);
+                }
+            };
+            tick();
+        }
+    }
+
+    /* Close Miro Modals */
+    async function closeSettingsModal() {
+        await miro.board.ui.closeModal();
+    }
+
+    /* Displays Modal content after all necessary scripts have loaded */
+    function displayContent(elmentId) {
+        var el = document.getElementById(elmentId);
+        fadeInJS(el, 250);
+        if ('overlay_wrapper1') {
+          document.getElementById('google_login').onclick = function() { getToken() };
+        }
+    }
+    
+    var google_sheets_processing = document.getElementById('create_chart_google_processing');
+    var create_chart_google = document.getElementById('create_chart_google');
+    var csv_processing = document.getElementById('create_chart_csv_processing');
+    var create_chart_csv = document.getElementById('create_chart');
+    
+    /* Function to Show or Hide errors (if any should happen) */
+    function showOrHideError(action, element, message) {
+      if (action === 'show') {
+        element.innerHTML = message;
+        element.style.display = 'block';
+      }
+      else if (action === 'hide') {
+        element.style.display = 'none';
+      }
+    }
+    
+    /* Show or Hide the processing button why the app processed data */
+    function showOrHideProcessingButton(action, type) {
+      if (action === 'show' && type == 'google_sheet') {
+        create_chart_google.style.display = 'none';
+        google_sheets_processing.style.display = 'block';
+      }
+      else if (action === 'hide' && type == 'google_sheet') {
+        google_sheets_processing.style.display = 'none';
+        create_chart_google.style.display = 'block';
+      }
+      else if (action === 'show' && type == 'csv') {
+        create_chart_csv.style.display = 'none';
+        csv_processing.style.display = 'block';
+      }
+      else if (action === 'hide' && type == 'csv') {
+        csv_processing.style.display = 'none';
+        create_chart_csv.style.display = 'block';
+      }
+    }
+    
+    /* Check that the spreadsheet provided contains the necessary headers to create the OrgChart */
+    function checkHeaders(headers) {
+      if (!headers) { 
+        return new Error('Error: No headers in the spreadsheet'); 
+      }
+      switch (true) {
+        case (headers.indexOf('Name') === -1):
+          return new Error('Error: CSV header "Name" not found. Please use the template provided above in step 1');
+          break;
+        case (headers.indexOf('Work Email') === -1):
+          return new Error('Error: CSV header "Work Email" not found. Please use the template provided above in step 1');
+          break;
+        case (headers.indexOf('Job Title') === -1):
+          return new Error('Error: CSV header "Job Title" not found. Please use the template provided above in step 1');
+          break;
+        case (headers.indexOf('Location') === -1):
+          return new Error('Error: CSV header "Location" not found. Please use the template provided above in step 1');
+          break;
+        case (headers.indexOf('Division') === -1):
+          return new Error('Error: CSV header "Division" not found. Please use the template provided above in step 1');
+          break;
+        case (headers.indexOf('Department') === -1):
+          return new Error('Error: CSV header "Department" not found. Please use the template provided above in step 1');
+          break;
+        case (headers.indexOf('Manager Email Address') === -1):
+          return new Error('Error: CSV header "Manager Email Address" not found. Please use the template provided above in step 1');
+          break;
+        default:
+          return true;
+      }
+    }
+    
+    /* Check that the provided spreadsheet has the mandatory content to create the OrgChart */
+    function checkContent(content) {
+      if (content.length == 0) {
+        return new Error('Error: The spreadsheet must not be empty');
+      }
+      for(var i=0; i < content.length; i++) {
+        if (!content[i].hasOwnProperty('Work Email')) {
+          return new Error('Error: The "Work Email" must not be empty');
+        }
+        else if (content[i]['Work Email'].value == '') {
+          return new Error('Error: The "Work Email" value must not be empty. Review line ' + (i + 2) + ' in your spreadsheet');
+        }
+      }
+      return true;
+    }
+    
+    /* Convert CSV data to JSON in the necessary JSON format - relevant for local CSV upload*/
+    function csvToJSON(text, quoteChar = '"', delimiter = ',') {
+      var rows=text.split("\n");
+      var headers=rows[0].replaceAll('"','');
+      headers=headers.split(',');
+      var headersCheck = checkHeaders(headers);
+      if (headersCheck != true) { return headersCheck; }
+
+      window.mainHeaders = JSON.stringify(headers);
+      
+      const regex = new RegExp(`\\s*(${quoteChar})?(.*?)\\1\\s*(?:${delimiter}|$)`, 'gs');
+
+      const match = line => [...line.matchAll(regex)]
+        .map(m => m[2]) 
+        .slice(0, -1); 
+
+      var lines = text.split('\n');
+      const heads = headers ?? match(lines.shift());
+      lines = lines.slice(1);
+
+      return lines.map(line => {
+        return match(line).reduce((acc, cur, i) => {
+            // replace blank matches with ""
+            const val = { value: cur.length <= 0 ? "" : Number(cur) || cur };
+            const key = heads[i] ?? `{i}`;
+            return { ...acc, [key]: val };
+          }, {});
+      });
+    }
+
+    /* Reads uploaded CSV file - Relevant for the CSV upload */
+    const readUploadedFileAsText = (inputFile) => {
+      const temporaryFileReader = new FileReader();
+
+      return new Promise((resolve, reject) => {
+        temporaryFileReader.onerror = (e) => {
+          console.error(e);
+          temporaryFileReader.abort();
+          reject(new DOMException('Error: ' + e));
+        };
+
+        temporaryFileReader.onload = () => {
+          csvContent = temporaryFileReader.result.replaceAll('\r\n', '\n');
+          csvContent = csvContent.replaceAll('\r', '\n');
+          var contentAsJSON = csvToJSON(csvContent);
+          resolve(contentAsJSON);
+        };
+
+        temporaryFileReader.readAsText(inputFile, 'UTF-8');
+
+      });
+    };
+
+    /* Process uploaded CSV file */
+    var handleUpload = async (event) => {
+      var file = document.getElementById('file').files[0];
+
+      try {
+        var fileContents = await readUploadedFileAsText(file);
+        if (fileContents.hasOwnProperty('stack') && fileContents.hasOwnProperty('message')) {
+          throw new Error(fileContents.message);
+        }
+        else if (fileContents.length == 0) {
+          throw new Error('Error: The spreadsheet must not be empty');
+        }
+        return fileContents;
+      } catch (e) {
+          showOrHideError('show', fileContentErrorDiv, e.message);
+          return false;
+      }
+    }
+    
+    /* Call Google Sheets API - Not relevant for local CSV upload */
+    async function makeApiCall(spreadSheetURLs) {
+      if (spreadSheetURLs.length > 0) {
+          var sheetIds = [];
+          var sheetsData = [];
+          var params = {};
+          var parameters = [];
+          var parentSheetId;
+          var sheets = [];
+          var sheetId;
+          for(var i=0; i < spreadSheetURLs.length; i++) {
+              parentSheetId = spreadSheetURLs[i].split('/');
+              parentSheetId = parentSheetId[5];
+              sheetIds.push(parentSheetId);
+
+              if (spreadSheetURLs[i].indexOf('#gid=') === -1) {
+                sheetId = null;
+              }
+              else {
+                sheetId = spreadSheetURLs[i].split('#gid=');
+                sheetId = sheetId[1];
+              }
+
+              params = {
+                  // The spreadsheet to request.
+                  spreadsheetId: parentSheetId,  // TODO: Update placeholder value.
+
+                  // The ranges to retrieve from the spreadsheet.
+                  ranges: [],  // TODO: Update placeholder value.
+
+                  // True if grid data should be returned.
+                  // This parameter is ignored if a field mask was set in the request.
+                  includeGridData: false,  // TODO: Update placeholder value.
+              };
+
+              try {
+                  var request = await gapi.client.sheets.spreadsheets.get(params);
+              } catch(e) {
+                  console.dir(e);
+                  return e;
+              }
+              
+            parameters = [];
+              for(var a=0; a < request.result.sheets.length; a++) {
+                  if (sheetId === null) {
+                    if (a === 0) {
+                      var sheetName = request.result.sheets[a].properties.title;
+                      sheets.push(sheetName);
+                      paramsData = {
+                          // The spreadsheet to request.
+                          spreadsheetId: request.result.spreadsheetId,  // TODO: Update placeholder value.
+
+                          // The ranges to retrieve from the spreadsheet.
+                          range: sheetName
+                      };
+                      parameters.push(paramsData);
+                      break;
+                    }
+                  }
+                  else if (request.result.sheets[a].properties.sheetId == sheetId) {
+                    var sheetName = request.result.sheets[a].properties.title;
+                    sheets.push(sheetName);
+                    paramsData = {
+                        // The spreadsheet to request.
+                        spreadsheetId: request.result.spreadsheetId,  // TODO: Update placeholder value.
+
+                        // The ranges to retrieve from the spreadsheet.
+                        range: sheetName
+                    };
+                    parameters.push(paramsData);
+                    break;
+                  }
+              }
+          }
+
+          try {
+              var sheetRequests = await Promise.all(parameters.map(location => gapi.client.sheets.spreadsheets.values.get(location)))
+          } 
+          catch(e) {
+              console.log(e.message);
+              return e;
+          }
+          
+          for(var b=0; b < sheetRequests.length; b++) {
+              if (sheetRequests[b].result.values) {
+                  var arr = sheetRequests[b].result.values;
+                  var worksheet = sheetRequests[b].result.range.split('!');
+                  worksheet = worksheet[0];
+                  for(var c=0; c < arr.length; c++) {
+                  if (b == 0 && c == 0) {
+                    window.mainHeaders = arr[0];
+                  }
+                      if (c !== 0) {
+                          var row = {};
+                          var rowNumber = c;
+                          for(var d=0; d < arr[c].length; d++) {
+                              var headers = arr[0];
+                              row[arr[0][d]] = {
+                                  value: arr[c][d],
+                                  spreadsheet_id: sheetIds[b],
+                                  worksheet_name: worksheet
+                              };
+                          }
+                          sheetsData.push(row);
+                      }
+                  }
+              }
+          }
+      }
+      return sheetsData;
+    }
+    
+    /* Communicated with main app (iframe "/app.html") via PostMessage */
+    async function broadcastAction(action,frame) {
+        var message;
+        var layout = document.querySelector('input[name="orgchart_layout"]:checked').value;
+        
+      if (action == 'create_chart_google') {
+            showOrHideError('hide', googleSheetsErrorDiv);
+            showOrHideProcessingButton('show', 'google_sheet');
+            
+            var url = document.getElementById('google_sheets_url').value;
+            var urls = [url];
+            var sheetsData = await makeApiCall(urls);
+
+            if (sheetsData.hasOwnProperty('result') && sheetsData.result.hasOwnProperty('error')) {
+                showOrHideError('show', googleSheetsErrorDiv, 'Error: Google API responded: "' + sheetsData.result.error.message + '"');
+                showOrHideProcessingButton('hide', 'google_sheet');
+                return false;            
+            }
+            var headersCheck = checkHeaders(window.mainHeaders);
+            if (headersCheck != true) {
+              showOrHideError('show', googleSheetsErrorDiv, headersCheck.message);
+              showOrHideProcessingButton('hide', 'google_sheet');
+              
+              return false;
+            }
+            var contentCheck = checkContent(sheetsData);
+            if (contentCheck != true) {
+              showOrHideError('show', googleSheetsErrorDiv, contentCheck.message);
+              showOrHideProcessingButton('hide', 'google_sheet');
+
+              return false;
+            }
+        }
+      
+        else if (action == 'create_chart_csv') {
+          showOrHideProcessingButton('show', 'csv');
+          var sheetsData = await handleUpload();
+          if (sheetsData == false) {
+            showOrHideProcessingButton('hide', 'csv');
+            return false 
+          }
+          var contentCheck = checkContent(sheetsData);
+          if (contentCheck != true) {
+            showOrHideError('show', fileContentErrorDiv, contentCheck.message);           
+            showOrHideProcessingButton('hide', 'csv');
+            return false;
+          }
+        }
+      
+        message = {
+            'action': 'create_chart',
+            'chart_layout': layout,
+            'csv_content': sheetsData,
+            'csv_headers': JSON.parse(JSON.stringify(window.mainHeaders))
+        };
+        frame.postMessage(message);
+        window.mainHeaders = '';
+    }
+    
+    /* Attach Event Listeners */
+    document.getElementById('create_chart_google').onclick = function() { getToken() };
+    document.getElementById('create_chart').onclick = function() { broadcastAction('create_chart_csv',mainAppFrame) };
+    document.getElementById('sign_out_link').onclick = function() { revokeToken() };
+    </script>
+    <script src="https://accounts.google.com/gsi/client" onload="gisInit()" async defer></script>
+    <script src="https://apis.google.com/js/api.js" onload="gapiLoad()" async defer></script>
+</body>
+</html>
