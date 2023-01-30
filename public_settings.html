@@ -1063,7 +1063,7 @@
             'action': 'create_chart',
             'chart_layout': layout,
             'csv_content': sheetsData,
-            'csv_headers': JSON.parse(JSON.stringify(window.mainHeaders))
+            'csv_headers': JSON.parse(window.mainHeaders)
         };
         frame.postMessage(message);
         window.mainHeaders = '';
