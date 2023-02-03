@@ -356,7 +356,7 @@
       </div>
       <div class="title-font" style="margin: 30px 0 4px 0; text-align: center"><span>Org Chart - Choose data source</span></div>
       <form id="spreadsheet_type" style="width: 412px; transition: height 2s; margin-left: 0">
-        <label class="radiobutton" style="font-size: 16px; font-weight: normal; margin: 25px 0 16px 0; display: none;">
+        <label class="radiobutton" style="font-size: 16px; font-weight: normal; margin: 25px 0 16px 0; display:none">
           <input type="radio" name="data_input_type" value="google_sheets">
           <span>Import from Google Sheets</span>
         </label>
@@ -394,17 +394,17 @@
           </div>
         </div>
         <label class="radiobutton" style="font-size: 16px; font-weight: normal; margin: 20px 0 20px 0">
-          <input type="radio" name="data_input_type" value="csv">
+          <input type="radio" name="data_input_type" value="csv" tabindex="-1">
           <span>Upload CSV file</span>
         </label>
         <div id="choose_datasource_buttons" style="text-align: left">
           <div style="text-align: left;">
               <div class="oauth-form__footer">
                  <div class="oauth-form__footer-buttons" style="display: block; text-align: left">
-                      <button id="back_to_step1" class="button button-secondary button button-font" type="button" tabindex="0" style="margin: 7px 0 0 0; min-width: 151px">Go back</button>
+                      <button tabindex="-1" id="back_to_step1" class="button button-secondary button button-font" type="button" tabindex="0" style="margin: 7px 0 0 0; min-width: 151px">Go back</button>
                       <button id="google_login" type="button" class="button button-primary button button-font" tabindex="0" style="display: none; padding: 0 24px; min-width: 172px; margin: 7px 0 0 16px">Sign in to Google</button>
                       <button id="move_to_step3_google" type="button" class="button button-primary button button-font" tabindex="0" style="display: none; padding: 0 24px; min-width: 172px; margin: 7px 0 0 16px">Next</button>
-                      <button id="move_to_step3" type="button" class="button button-primary button button-font" tabindex="0" style="display: none; padding: 0 24px; min-width: 172px; margin: 7px 0 0 16px">Next</button>
+                      <button tabindex="-1" id="move_to_step3" type="button" class="button button-primary button button-font" tabindex="0" style="display: none; padding: 0 24px; min-width: 172px; margin: 7px 0 0 16px">Next</button>
                   </div>
               </div>
           </div>
@@ -412,8 +412,6 @@
       </form>
   </div>
 </div>
-
-  
 
 <div id="overlay_wrapper3" class="overlay-wrapper" style="opacity: 1; margin-left: 2000px; transition: all 700ms">
         <div class="overlay-content"> 
@@ -423,14 +421,14 @@
                 <div class="alert alert-success title-font" style="margin: 0 0 24px">Org Chart - Upload CSV file</div>
                 <div class="form-group-small" style="text-align: left;">
                     <ol style="font-size: 14px;margin: 0 0 0 -25px">
-                      <li style="margin: 10px 0 10px 0">Download <a style="text-decoration: none; color: #4262ff" href="data:application/octet-stream,%22Name%22%2C%22Work%20Email%22%2C%22Job%20Title%22%2C%22Division%22%2C%22Department%22%2C%22Location%22%2C%22Job%20Description%22%2C%22Manager%20Email%20Address%22%0A%22John%20Doe%22%2C%22john.doe%40miro.com%22%2C%22CEO%22%2C%22Management%22%2C%22Executive%22%2C%22Amsterdam%22%2C%22Head%20of%20the%20Organization%22%2C%22%22%0A%22Mark%20Smith%22%2C%22mark.smith%40miro.com%22%2C%22Vice%20President%22%2C%22Management%22%2C%22Executive%22%2C%22Amsterdam%22%2C%22Vice%20President%20of%20the%20Organization%22%2C%22john.doe%40miro.com%22" download="Miro_OrgChart_Template.csv">
+                      <li style="margin: 10px 0 10px 0">Download <a tabindex="-1" style="text-decoration: none; color: #4262ff" href="data:application/octet-stream,%22Name%22%2C%22Work%20Email%22%2C%22Job%20Title%22%2C%22Division%22%2C%22Department%22%2C%22Location%22%2C%22Job%20Description%22%2C%22Manager%20Email%20Address%22%0A%22John%20Doe%22%2C%22john.doe%40miro.com%22%2C%22CEO%22%2C%22Management%22%2C%22Executive%22%2C%22Amsterdam%22%2C%22Head%20of%20the%20Organization%22%2C%22%22%0A%22Mark%20Smith%22%2C%22mark.smith%40miro.com%22%2C%22Vice%20President%22%2C%22Management%22%2C%22Executive%22%2C%22Amsterdam%22%2C%22Vice%20President%20of%20the%20Organization%22%2C%22john.doe%40miro.com%22" download="Miro_OrgChart_Template.csv">
                           this CSV template</a></li>
                       <li style="margin: 10px 0 10px 0">Fill in the CSV template from step 1 with your org chart data<br><span style="font-size: 12px"><strong>Note</strong>: headers must not be modified</span></li>
                       <li style="margin: 10px 0 10px 0">Upload the completed template below in <strong>.csv</strong> format</li>
                     </ol>
                     <div style="margin: 12px 0 0 0" class="input-field-block">
                       <label id="file_input_wrapper" class="button button-primary button-small" style="max-width: 77px; display: inline-table; margin-bottom: 0; margin-right: 12px">Choose file
-	    	              <input type="file" id="file" size="50" accept=".csv" style="display:none">
+	    	              <input tabindex="-1" type="file" id="file" size="50" accept=".csv" style="width: 1px; height: 1px">
                       </label>
                       <span id="file_name" style="display: inline-table; margin-top: 10px; vertical-align: middle; font-size: 12px">No file chosen</span>
                     </div>
@@ -442,8 +440,8 @@
                 <div style="margin-top: 25px; text-align: left;">
                     <div class="oauth-form__footer">
                        <div class="oauth-form__footer-buttons">
-                           <button id="back_to_step2" class="button button-secondary button button-font" type="button" tabindex="0" style="min-width: 151px; margin: 0 16px 0 0">Go back</button>
-                           <button id="create_chart" type="button" class="button button-primary button button-font" tabindex="0" style="padding: 0 24px; min-width: 160px; margin-bottom: 0" disabled="disabled">Create chart</button>
+                           <button tabindex="-1" id="back_to_step2" class="button button-secondary button button-font" type="button" tabindex="0" style="min-width: 151px; margin: 0 16px 0 0">Go back</button>
+                           <button tabindex="-1" id="create_chart" type="button" class="button button-primary button button-font" tabindex="0" style="padding: 0 24px; min-width: 160px; margin-bottom: 0" disabled="disabled">Create chart</button>
                            <span id="create_chart_csv_processing" style="cursor: not-allowed; display: none"><button type="button" class="button button-primary button-loading" tabindex="0" style="padding: 0 24px; min-width: 160px; margin-bottom: 0; pointer-events: none"></button></span>
                        </div>
                         <div class="oauth-form__next-step-info">Next: You will be taken back to the board</div>
@@ -453,7 +451,7 @@
         </div>
     </div>
   
-  <div id="overlay_wrapper4" class="overlay-wrapper" style="opacity: 1; margin-left: 3000px; transition: all 700ms">
+  <div id="overlay_wrapper4" class="overlay-wrapper" style="opacity: 1; margin-left: 3000px; transition: all 700ms; display:none">
         <div class="overlay-content"> 
             <div style="margin-left:auto; margin-right:auto; width: 430px"> 
               <img style="max-width:131px; margin-bottom: 12px" src="https://miro-org.s3.eu-central-1.amazonaws.com/amped_org_chart_logo.svg">
@@ -491,9 +489,12 @@
         </div>
     </div>
     <div id="feedback_wrapper" style="position: fixed; bottom: 0; right: 0;">
-      <div>
-        <a class="feedback-text" href="https://forms.gle/dHYD24enfGyET5789" target="_blank">Send feedback</a>
-      </div>
+      <div style="cursor: pointer;">
+          <a class="feedback-text" href="https://forms.gle/dHYD24enfGyET5789" target="_blank" style="cursor: pointer;">
+              <span class="m2 icon icon-comment-feedback copytext" style="float: left; margin-right: 5px; cursor: pointer;"></span>
+              <span style="cursor: pointer;">Send feedback</span>
+          </a>
+        </div>
     </div>
     <script>
     
@@ -646,36 +647,74 @@
         $('#move_to_step3').fadeIn();
       }
     });
+
+    function toggleNavigation(elementId) {
+        var selector = '#' + elementId + ' [tabindex]';
+        var visibleNavigableItems = document.querySelectorAll(selector);
+        for(var i=0; i < visibleNavigableItems.length; i++) {
+            visibleNavigableItems[i].tabIndex = '';
+        }
+        if (elementId !== 'overlay_wrapper1') {
+            var navigableItems = document.querySelectorAll('#overlay_wrapper1 [tabindex]');
+            for(var i=0; i < visibleNavigableItems.length; i++) {
+                navigableItems[i].tabIndex = '-1';
+            }
+        }
+        if (elementId !== 'overlay_wrapper2') {
+            var navigableItems = document.querySelectorAll('#overlay_wrapper2 [tabindex]');
+            for(var i=0; i < navigableItems.length; i++) {
+                navigableItems[i].tabIndex = '-1';
+            }
+        }
+        if (elementId !== 'overlay_wrapper3') {
+            var navigableItems = document.querySelectorAll('#overlay_wrapper3 [tabindex]');
+            for(var i=0; i < navigableItems.length; i++) {
+                navigableItems[i].tabIndex = '-1';
+            }
+        }
+        if (elementId !== 'overlay_wrapper4') {
+            var navigableItems = document.querySelectorAll('#overlay_wrapper4 [tabindex]');
+            for(var i=0; i < navigableItems.length; i++) {
+                navigableItems[i].tabIndex = '-1';
+            }
+        }
+    }
       
     /* Click Event Listeners - Controls the carousel view when moving between the steps back and forth */
     document.getElementById('move_to_step2').addEventListener('click', function(e){
       document.getElementById('overlay_wrapper1').style.marginLeft = '-1000px';
       document.getElementById('overlay_wrapper2').style.marginLeft = '0';
+      toggleNavigation('overlay_wrapper2');
     });
       
     document.getElementById('back_to_step1').addEventListener('click', function(e){
       document.getElementById('overlay_wrapper2').style.marginLeft = '1000px';
       document.getElementById('overlay_wrapper1').style.marginLeft = '0';
+      toggleNavigation('overlay_wrapper1');
     });
       
     document.getElementById('move_to_step3').addEventListener('click', function(e){
       document.getElementById('overlay_wrapper2').style.marginLeft = '-1000px';
       document.getElementById('overlay_wrapper3').style.marginLeft = '0';
+      toggleNavigation('overlay_wrapper3');
     });
       
     document.getElementById('back_to_step2').addEventListener('click', function(e){
       document.getElementById('overlay_wrapper3').style.marginLeft = '1000px';
       document.getElementById('overlay_wrapper2').style.marginLeft = '0';
+      toggleNavigation('overlay_wrapper2');
     });
       
     document.getElementById('move_to_step3_google').addEventListener('click', function(e){
       document.getElementById('overlay_wrapper2').style.marginLeft = '-1000px';
       document.getElementById('overlay_wrapper4').style.marginLeft = '0';
+      toggleNavigation('overlay_wrapper4');
     });
       
     document.getElementById('back_to_step2_google').addEventListener('click', function(e){
       document.getElementById('overlay_wrapper4').style.marginLeft = '1000px';
       document.getElementById('overlay_wrapper2').style.marginLeft = '0';
+      toggleNavigation('overlay_wrapper2');
     });
     
     /* Upload Event Listener - Displays the name of the file uploaded or if no file has been uploaded */
