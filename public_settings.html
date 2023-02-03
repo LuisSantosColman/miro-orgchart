@@ -417,7 +417,7 @@
         <div class="overlay-content"> 
             <div style="margin-left:auto; margin-right:auto; width: 430px"> 
                 <img style="max-width:131px; margin-bottom: 24px" src="https://miro-org.s3.eu-central-1.amazonaws.com/amped_org_chart_logo.svg">
-            <div id="scroll_area" style="overflow-y: auto;">
+            <div id="scroll_area">
                 <div class="alert alert-success title-font" style="margin: 0 0 24px">Org Chart - Upload CSV file</div>
                 <div class="form-group-small" style="text-align: left;">
                     <ol style="font-size: 14px;margin: 0 0 0 -25px">
@@ -864,12 +864,48 @@
       }
       return true;
     }
+
+    /* Function to Detect delimiter type */
+    function delimiter(csvText) {
+        t = csvText.split("\n")[0];
+        let delArray = [',', ';', '|', '    '];
+        let comma = samiclon = pipe = tab = 0;
+        delArray.forEach((e, i) => {
+            if (i === 0) {
+                comma = t.split(e).length;
+            } else if (i === 1) {
+                samiclon = t.split(e).length;
+            } else if (i === 2) {
+                pipe = t.split(e).length;
+            } else if (i === 3) {
+                tab = t.split(e).length;
+            }
+        });
+        let tmpArray1 = [comma, samiclon, pipe, tab]
+        let tmpArray = [comma, samiclon, pipe, tab];
+        let maxLen = tmpArray.sort((a, b) => b - a)[0];
+        let delimiter_i = 0;
+        tmpArray1.forEach((e, i) => {
+            if (maxLen === e) {
+                delimiter_i = i;
+            }
+        });
+        if (delimiter_i === 0) {
+            return ',';
+        } else if (delimiter_i === 1) {
+            return ';'
+        } else if (delimiter_i === 2) {
+            return '|'
+        } else if (delimiter_i === 3) {
+            return '    '
+        }
+    }
     
     /* Convert CSV data to JSON in the necessary JSON format - relevant for local CSV upload*/
-    function csvToJSON(text, quoteChar = '"', delimiter = ',') {
+    function csvToJSON(text, delimiter, quoteChar = '"') {
       var rows=text.split("\n");
       var headers=rows[0].replaceAll('"','');
-      headers=headers.split(',');
+      headers=headers.split(delimiter);
       var headersCheck = checkHeaders(headers);
       if (headersCheck != true) { return headersCheck; }
 
@@ -884,6 +920,12 @@
       var lines = text.split('\n');
       const heads = headers ?? match(lines.shift());
       lines = lines.slice(1);
+      for(var i=0; i < lines.length; i++){
+      if (lines[i] == '') {
+            lines.splice(i,1);
+            i--;
+          }
+        }
 
       return lines.map(line => {
         return match(line).reduce((acc, cur, i) => {
@@ -909,7 +951,8 @@
         temporaryFileReader.onload = () => {
           csvContent = temporaryFileReader.result.replaceAll('\r\n', '\n');
           csvContent = csvContent.replaceAll('\r', '\n');
-          var contentAsJSON = csvToJSON(csvContent);
+          var delimiterType = delimiter(csvContent);
+          var contentAsJSON = csvToJSON(csvContent, delimiterType);
           resolve(contentAsJSON);
         };
 
