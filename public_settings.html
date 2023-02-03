@@ -656,7 +656,7 @@
         }
         if (elementId !== 'overlay_wrapper1') {
             var navigableItems = document.querySelectorAll('#overlay_wrapper1 [tabindex]');
-            for(var i=0; i < visibleNavigableItems.length; i++) {
+            for(var i=0; i < navigableItems.length; i++) {
                 navigableItems[i].tabIndex = '-1';
             }
         }
