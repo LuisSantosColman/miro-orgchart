@@ -903,38 +903,36 @@
     
     /* Convert CSV data to JSON in the necessary JSON format - relevant for local CSV upload*/
     function csvToJSON(text, delimiter, quoteChar = '"') {
-      var rows=text.split("\n");
-      var headers=rows[0].replaceAll('"','');
-      headers=headers.split(delimiter);
-      var headersCheck = checkHeaders(headers);
-      if (headersCheck != true) { return headersCheck; }
-
-      window.mainHeaders = JSON.stringify(headers);
-      
-      const regex = new RegExp(`\\s*(${quoteChar})?(.*?)\\1\\s*(?:${delimiter}|$)`, 'gs');
-
-      const match = line => [...line.matchAll(regex)]
-        .map(m => m[2]) 
+        var rows=text.split("\n");
+        var rowContent;
+        var headers=rows[0].replaceAll('"','');
+        headers=headers.split(delimiter);
+        var headersCheck = checkHeaders(headers);
+        if (headersCheck != true) { return headersCheck; }
+        window.mainHeaders = JSON.stringify(headers);
+        const regex = new RegExp(`\\s*(${quoteChar})?(.*?)\\1\\s*(?:${delimiter}|$)`, 'gs');
+        const match = line => [...line.matchAll(regex)]
+        .map(m => m[2])
         .slice(0, -1); 
-
-      var lines = text.split('\n');
-      const heads = headers ?? match(lines.shift());
-      lines = lines.slice(1);
-      for(var i=0; i < lines.length; i++){
-      if (lines[i] == '') {
-            lines.splice(i,1);
-            i--;
-          }
+        var lines = text.split('\n');
+        const heads = headers ?? match(lines.shift());
+        lines = lines.slice(1);
+        for(var i=0; i < lines.length; i++){
+            rowContent = lines[i].replaceAll(delimiter,'');
+            if (rowContent == '') {
+                lines.splice(i,1);
+                i--;
+            }
         }
 
-      return lines.map(line => {
+        return lines.map(line => {
         return match(line).reduce((acc, cur, i) => {
             // replace blank matches with ""
             const val = { value: cur.length <= 0 ? "" : Number(cur) || cur };
             const key = heads[i] ?? `{i}`;
             return { ...acc, [key]: val };
           }, {});
-      });
+        });
     }
 
     /* Reads uploaded CSV file - Relevant for the CSV upload */
