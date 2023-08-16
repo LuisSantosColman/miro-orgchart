@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script id="miro-sdk2" src="https://miro.com/app/static/sdk/v2/miro.js"></script>
+    <link rel="icon" href="data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=">
+    <link rel="stylesheet" href="https://unpkg.com/mirotone/dist/styles.css">
+    <link rel="stylesheet" href="orgchart.css">
+     <style>
+        .overlay-wrapper1 {
+          width: 100%;
+          top: 45%;
+          left: 12px;
+          position: absolute;
+        }
+
+        .overlay-wrapper2 {
+          position: relative;
+          display: flex;
+          justify-content: center;
+          height: 25rem;
+          align-items: center;
+          width: 100%;
+          top: 50%;
+          left: 50%;
+          position: absolute;
+          transform: translateX(-50%) translateY(-50%);
+        }
+
+        .overlay-content {
+          justify-content: center;
+          text-align: center;
+          font-family: 'Open Sans', sans-serif;
+          font-size: 16px;
+          line-height: 1.5;
+        }
+
+        .loading-font {
+          font-family: 'Open Sans', sans-serif;
+          font-size: 16px;
+          font-weight: 300;
+        }
+
+        .spinner:after {
+          -webkit-animation: spinning .5s linear infinite;
+          animation: spinning .5s linear infinite;
+          border-left: 2px solid #fff;
+          border-bottom: 2px solid #fff;
+          border-radius: 9999px;
+          border: 2px solid #000;
+          border-right: 2px solid transparent;
+          border-top: 2px solid transparent;
+          content: "";
+          display: block;
+          height: 1em;
+          width: 1em;
+          left: -10.5px;
+          position: absolute;
+          top: 1.3px;
+          /* left: calc(50% - (1em / 2)); */
+          /* position: relative; */
+        }
+
+        .button-font {
+          font-family: 'Open Sans', sans-serif;
+          font-size: 16px;
+          font-weight: 300;
+        }
+
+        .title-font {
+          font-family: 'Open Sans', sans-serif;
+          font-size: 24px;
+          font-weight: 600;
+        }
+
+        .overlay-logo {
+          width: 160px;
+          height: 61px;
+          z-index: 1100;
+        }
+
+        .oauth-form__warning-box {
+          display: -webkit-box;
+          display: -ms-flexbox;
+          display: flex;
+          -webkit-box-align: center;
+          -ms-flex-align: center;
+          align-items: center;
+          background-color: var(--blue200);
+          border: solid 1px var(--blue300);
+          border-radius: 8px;
+          padding: 12px;
+          margin-bottom: 24px;
+          font-size: 14px;
+          line-height: 20px;
+          height: 56px;
+          -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+        }
+
+        .oauth-form__footer-buttons {
+          display: flex;
+        }
+
+        .oauth-form__next-step-info {
+          margin-top: 7px;
+          font-size: 12px;
+          line-height: 18px;
+          color: var(--indigo600);
+        }
+      </style>
+</head>
+<body>
+  <div id="overlay-wrapper1" class="overlay-wrapper1">
+    <div style="position: relative;">
+      <div class="overlay-content" style="display: inline-block;"> 
+        <span class="spinner loading-font"></span>
+      </div>
+      <span class="loading-font" style="display: inline-block; margin-left: 10px; position: absolute; min-width: 106px; left: 10px;">Creating chart, please wait...</span>
+    </div>
+  </div>
+</body>
+</html>
