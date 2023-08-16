@@ -39,11 +39,24 @@
 
     window.inProgress = false;
     var settingsModalUrl;
-      
+
+    function generateRandomString(length) {
+      var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      var result = '';
+      var charactersLength = characters.length;
+
+      for (var i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+      }
+
+      return result;
+    }
+
     async function start() {
+        var random = generateRandomString(25);
         if (window.inProgress === false) {      
           await miro.board.ui.openModal({
-                url: 'public_settings.html', 
+                url: 'public_settings.html?v=' + random, 
                 height: 480,
                 width: 570,
                 fullscreen: false
@@ -425,21 +438,63 @@
                   y = jqueryElements[i].getBoundingClientRect().y + (viewport.y + (viewport.height / 2));
                   width = jqueryElements[i].getBoundingClientRect().width; // 1308.9694139611743
                   height = jqueryElements[i].getBoundingClientRect().height; // 793.5627072139619
-                  var division = hashTable[userId]['Division'].value.trim();
-                  var role = hashTable[userId]['Job Title'].value;
-                  var nameVal = hashTable[userId]['Name'].value.trim();
-                  var department = hashTable[userId]['Department'].value.trim();
-                  var location = hashTable[userId]['Location'].value.trim();
-                  var email = hashTable[userId]['Work Email'].value;
+
+                  var hasTableArrayOfKeys = Object.keys(hashTable[userId]);
+                  var extraColumnsVal = '';
+                  for(var z=0; z < hasTableArrayOfKeys.length; z++) {
+                    switch (hasTableArrayOfKeys[z]) {
+                      case ('Division'):
+                        var division = hashTable[userId]['Division'].value.toString().trim();
+                        break;
+                      case ('Job Title'):
+                        var role = hashTable[userId]['Job Title'].value.toString().trim();
+                        break;
+                      case ('Name'):
+                        var nameVal = hashTable[userId]['Name'].value.toString().trim();
+                        break;
+                      case ('Department'):
+                        var department = hashTable[userId]['Department'].value.toString().trim();
+                        break;
+                      case ('Location'):
+                        var location = hashTable[userId]['Location'].value.toString().trim();
+                        break;
+                      case ('Work Email'):
+                        var email = hashTable[userId]['Work Email'].value.toString().trim();
+                        break;
+                      case ('Job Description'):
+                        break;
+                      case ('Manager Email Address'):
+                        break;
+                      case ('id'):
+                        break;
+                      case ('manager_id'):
+                        break;
+                      case ('children'):
+                        break;
+                      default:
+                        var newColumn = hashTable[userId][hasTableArrayOfKeys[z]].value.toString().trim();
+                        if (newColumn != '') {
+                          extraColumnsVal += ('<li><strong>' + hasTableArrayOfKeys[z] + '</strong>: ' + newColumn + '</li>');
+                        }
+                    }
+                  }
+
                   var name = '<p>' + nameVal + '</p>' + (role != '' ? ('<p>' + role + '</p>') : '') + '<p>' + email + '</p><p></br></p>' + (department != '' ? ('<p>' + department + '</p>') : '') + (location != '' ? ('<p>' + location + '</p>') : '');
-                  var descriptionVal = hashTable[userId].hasOwnProperty('Job Description') ? hashTable[userId]['Job Description'].value.trim() : '';
+
+                  if (extraColumnsVal != '') {
+                    extraColumnsVal = '<ul>' + extraColumnsVal + '</ul><br><br>';
+                  }
+
+                  var descriptionVal = hashTable[userId].hasOwnProperty('Job Description') ? hashTable[userId]['Job Description'].value.toString().trim() : '';
                   descriptionVal = descriptionVal.replaceAll('\n', '<br>');
-                  var description = '<p>' + (descriptionVal != '' ? descriptionVal : '<span style="color: transparent">.</span>') + '</p>';
+                  var description = extraColumnsVal + '<p>' + (descriptionVal != '' ? descriptionVal : (extraColumnsVal != '' ? '' : '<span style="color: transparent">.</span>')) + '</p>';
+
                   var cardColor = '#2D9BF0';
                   shapes[userId].shape['base'] = await createCard(name, description, cardColor, x, y, width, height);
+                  if (i === 0) { miro.board.viewport.zoomTo(shapes[userId].shape['base']); }
+
                   shapes[userId].shape['base'].user_id = userId;
-                  shapes[userId].shape['base'].manager_id = hashTable[userId].manager_id.value;             
-                  if (i === 0) { await miro.board.viewport.zoomTo(shapes[userId].shape['base']); }
+                  shapes[userId].shape['base'].manager_id = hashTable[userId].manager_id.value;
                 //}
             }
 
@@ -603,27 +658,34 @@
 
             document.getElementById('chart-container').innerHTML = '';
             window.inProgress = false;
+            await miro.board.ui.closeModal();
             await miro.board.ui.openModal({
-                url:'finished_modal.html',
-                width: 400, 
-                height: 250 
+              url:'finished_modal.html',
+              width: 400, 
+              height: 250 
             });
         }
       
         async function handleBroadcastedData(event) {
-            if (event && typeof event.data !== 'undefined') {
-                if (event.data.action == 'create_chart') {
-                    init(false, event.data.chart_layout, event.data.csv_content, event.data.csv_headers);
-                    await miro.board.ui.closeModal();
-                }
+          if (event && typeof event.data !== 'undefined') {
+            if (event.data.action == 'create_chart') {
+              init(false, event.data.chart_layout, event.data.csv_content, event.data.csv_headers);
+              await miro.board.ui.closeModal();
+              await miro.board.ui.openModal({
+                url: 'loading.html', 
+                height: 50,
+                width: 235,
+                fullscreen: false
+              });
             }
+          }
         }
 
         /* Listen to Post Messages from settings.html */
         window.addEventListener("message", (event) => {
-            if (event.origin == "https://s3.eu-central-1.amazonaws.com") {
-                handleBroadcastedData(event);
-            }
+          if (event.origin == "https://s3.eu-central-1.amazonaws.com") {
+            handleBroadcastedData(event);
+          }
         }, false);
       
         self.onerror = function() { window.inProgress = false; }; 
